@@ -12,7 +12,7 @@ var edges = [edge1, edge2, edge3, edge4, edge5, edge6, edge7, edge8, edge9];
 
 function createGraph(vertices, edges)
 {
-    var connections = new Map();
+    let connections = new Map();
     for(let verticeId of vertices)
     {
         let edgesTo = edges.filter(edge => edge.from === verticeId);
@@ -23,7 +23,7 @@ function createGraph(vertices, edges)
 
 function createResidualNetwork(graph)
 {
-    var newEdges = [];
+    let newEdges = [];
     for(let edge of graph.edges)
     {
         if(edge.flow > 0)

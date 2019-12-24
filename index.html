@@ -6,17 +6,24 @@
 	<title>MaxFlow algorithm</title>
 	<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 	<style type="text/css">
-		#mynetwork {
-			width: 600px;
+		.graphs {
 			height: 400px;
 			border: 1px solid lightgray;
 		}
+		#graphs-container {
+			columns: 2;
+		}
+
 	</style>
 </head>
 
 <body>
 	<script src="js/MaxFlow.js"></script>
-	<div id="mynetwork"></div>
+	<div id="graphs-container">
+		<div class="graphs" id="mynetwork"></div>
+		<div class="graphs" id="mynetwork1"></div>
+	</div>
+
 	<script type="text/javascript">
 
 		var nodesVisual = vertices.map(verticeId => { return { id: verticeId, label: "Node " + verticeId } });
@@ -27,12 +34,15 @@
 
 		// create a network
 		var container = document.getElementById('mynetwork');
+		var container1 = document.getElementById('mynetwork1');
 		var data = {
 			nodes: nodesDataSet,
 			edges: edgesDataSet
 		};
-		var options = { configure: { enabled: true }, edges: { arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: false }, physics: false };
+		var options = { configure: { enabled: false }, edges: { arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: false }, physics: false };
 		var network = new vis.Network(container, data, options);
+
+		var network1 = new vis.Network(container1, data, options);
 	</script>
 </body>
 
