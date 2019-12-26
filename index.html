@@ -7,13 +7,13 @@
 	<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 	<style type="text/css">
 		.graphs {
-			height: 400px;
+			height: 500px;
 			border: 1px solid lightgray;
 		}
+
 		#graphs-container {
 			columns: 2;
 		}
-
 	</style>
 </head>
 
@@ -23,8 +23,23 @@
 		<div class="graphs" id="mynetwork"></div>
 		<div class="graphs" id="mynetwork1"></div>
 	</div>
+	<button type="button" onclick="displayRandomGraph()">RANDOM GRAPH</button>
 
 	<script type="text/javascript">
+
+		function displayRandomGraph() {
+			const graph = generateRandomFlowNetwork();
+			const nodesVisual = [...graph.connections.keys()].map(
+				verticeId => { return { id: verticeId, label: "Node " + verticeId } });
+			const edgesVisual = graph.edges.map(
+				edge => { return { from: edge.from, to: edge.to, label: edge.flow + "/" + edge.cap, length:250 } });
+
+			nodesDataSet.clear();
+			edgesDataSet.clear();
+			nodesDataSet.add(nodesVisual);
+			edgesDataSet.add(edgesVisual);
+			network.stabilize();
+		}
 
 		var nodesVisual = vertices.map(verticeId => { return { id: verticeId, label: "Node " + verticeId } });
 		var edgesVisual = edges.map(edge => { return { from: edge.from, to: edge.to, label: edge.flow + "/" + edge.cap } });
@@ -39,9 +54,23 @@
 			nodes: nodesDataSet,
 			edges: edgesDataSet
 		};
-		var options = { configure: { enabled: false }, edges: { arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: false }, physics: false };
+		var options = {
+			configure:
+			{
+				enabled: false
+			},
+			edges:
+			{
+				arrows:
+				{
+					to: { enabled: true, scaleFactor: 0.5 }
+				}, smooth: false
+			},
+			physics: {
+				enabled: false
+			}
+		};
 		var network = new vis.Network(container, data, options);
-
 		var network1 = new vis.Network(container1, data, options);
 	</script>
 </body>
