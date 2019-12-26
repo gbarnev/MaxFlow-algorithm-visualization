@@ -11,7 +11,11 @@
 			border: 1px solid lightgray;
 		}
 
-		#graphs-container {
+		#graphs-flowNetDup {
+			columns: 2;
+		}
+
+		#buttons-flowNetDup {
 			columns: 2;
 		}
 	</style>
@@ -19,37 +23,30 @@
 
 <body>
 	<script src="js/MaxFlow.js"></script>
-	<div id="graphs-container">
-		<div class="graphs" id="mynetwork"></div>
-		<div class="graphs" id="mynetwork1"></div>
+	<div id="graphs-flowNetDup">
+		<div class="graphs" id="flowNet"></div>
+		<div class="graphs" hidden=1 id="flowNetDup"></div>
 	</div>
-	<button type="button" onclick="displayRandomGraph()">RANDOM GRAPH</button>
+	<div id="buttons-flowNetDup">
+		<button type="button" onclick="displayRandomGraph()">RANDOM GRAPH</button>
+		<button type="button" onclick="runEdmondsKarpAlgorithm()">RUN EDMONDS-KARP</button>
+	</div>
 
 	<script type="text/javascript">
 
-		function displayRandomGraph() {
-			const graph = generateRandomFlowNetwork();
-			const nodesVisual = [...graph.connections.keys()].map(
-				verticeId => { return { id: verticeId, label: "Node " + verticeId } });
-			const edgesVisual = graph.edges.map(
-				edge => { return { from: edge.from, to: edge.to, label: edge.flow + "/" + edge.cap, length:250 } });
+		var graph = generateRandomFlowNetwork();
 
-			nodesDataSet.clear();
-			edgesDataSet.clear();
-			nodesDataSet.add(nodesVisual);
-			edgesDataSet.add(edgesVisual);
-			network.stabilize();
-		}
-
-		var nodesVisual = vertices.map(verticeId => { return { id: verticeId, label: "Node " + verticeId } });
-		var edgesVisual = edges.map(edge => { return { from: edge.from, to: edge.to, label: edge.flow + "/" + edge.cap } });
+		const nodesVisual = [...graph.connections.keys()].map(
+			verticeId => { return { id: verticeId, label: "Node " + verticeId } });
+		const edgesVisual = graph.edges.map(
+			edge => { return { from: edge.from, to: edge.to, label: edge.flow + "/" + edge.cap, length: 250 } });
 
 		var nodesDataSet = new vis.DataSet(nodesVisual);
 		var edgesDataSet = new vis.DataSet(edgesVisual);
 
 		// create a network
-		var container = document.getElementById('mynetwork');
-		var container1 = document.getElementById('mynetwork1');
+		var flowNetContainer = document.getElementById('flowNet');
+		var flowNetContainerDup = document.getElementById('flowNetDup');
 		var data = {
 			nodes: nodesDataSet,
 			edges: edgesDataSet
@@ -70,9 +67,44 @@
 				enabled: false
 			}
 		};
-		var network = new vis.Network(container, data, options);
-		var network1 = new vis.Network(container1, data, options);
+		var visNet = new vis.Network(flowNetContainer, data, options);
+		var visNetResidual = new vis.Network(flowNetContainerDup, data, options);
+
+		function displayRandomGraph() {
+			graph = generateRandomFlowNetwork();
+			const nodesVisual = [...graph.connections.keys()].map(
+				verticeId => { return { id: verticeId, label: "Node " + verticeId } });
+			const edgesVisual = graph.edges.map(
+				edge => { return { from: edge.from, to: edge.to, label: edge.flow + "/" + edge.cap, length: 250 } });
+
+			nodesDataSet.clear();
+			edgesDataSet.clear();
+			nodesDataSet.add(nodesVisual);
+			edgesDataSet.add(edgesVisual);
+			visNet.stabilize();
+		}
+
+		function runEdmondsKarpAlgorithm() {
+			for (let step of EdmondsKarp(graph)) {
+				switch (step.type) {
+					case AlgoStatesEnum.INIT_RESIDUAL:
+						console.log("INIT_RESIDUAL");
+						break;
+					case AlgoStatesEnum.ADD_EDGE_RESIDUAL:
+						console.log("ADD_EDGE_RESIDUAL");
+						break;
+					case AlgoStatesEnum.FIND_PATH_RESIDUAL:
+						console.log("FIND_PATH_RESIDUAL");
+						break;
+					case AlgoStatesEnum.MIN_FLOW_INCREASE:
+						console.log("MIN_FLOW_INCREASE");
+						break;
+					case AlgoStatesEnum.FINAL_CALC_MAXFLOW:
+						console.log("FINAL_CALC_MAXFLOW");
+						break;
+				}
+			}
+		}
 	</script>
 </body>
-
 </html>
