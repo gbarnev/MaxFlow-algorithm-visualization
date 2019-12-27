@@ -15,10 +15,18 @@ var AlgoStatesEnum =
 {
     INIT_RESIDUAL: 0,
     ADD_EDGE_RESIDUAL: 1,
-    FIND_PATH_RESIDUAL: 2,
-    MIN_FLOW_INCREASE: 3,
-    FINAL_CALC_MAXFLOW: 4
+    PATH_FOUND_MIN_FLOW_INCREASE: 2,
+    FINAL_CALC_MAXFLOW: 3
 }
+
+var EdgeIdGenerator = function () {
+    var counter = 0;
+    return {
+        getNextEdgeId: function () {
+            return counter++;
+        }
+    }
+}();
 
 function createGraph(vertices, edges) {
     let connections = new Map();
@@ -56,7 +64,7 @@ function generateRandomFlowNetwork(vCnt) {
             edge.from == vTo && edge.to == vFrom))
             continue;
 
-        allEdges.push({ from: vFrom, to: vTo, flow: 0, cap: getRndInteger(1, 15) })
+        allEdges.push({ id: EdgeIdGenerator.getNextEdgeId(), from: vFrom, to: vTo, flow: 0, cap: getRndInteger(1, 15) })
         --leftEdgesToAdd;
     }
 
@@ -72,13 +80,13 @@ function* createResidualNetwork(graph) {
     yield { type: AlgoStatesEnum.INIT_RESIDUAL, obj: graph.connections.keys() };
     for (let edge of graph.edges) {
         if (edge.flow > 0) {
-            const newEdge = { from: edge.to, to: edge.from, flow: edge.flow };
+            const newEdge = { id: EdgeIdGenerator.getNextEdgeId(), from: edge.to, to: edge.from, flow: edge.flow };
             newEdges.push(newEdge);
             yield { type: AlgoStatesEnum.ADD_EDGE_RESIDUAL, obj: newEdge };
         }
 
         if (edge.flow < edge.cap) {
-            const newEdge = { from: edge.from, to: edge.to, flow: (edge.cap - edge.flow) };
+            const newEdge = { id: EdgeIdGenerator.getNextEdgeId(), from: edge.from, to: edge.to, flow: (edge.cap - edge.flow) };
             newEdges.push(newEdge);
             yield { type: AlgoStatesEnum.ADD_EDGE_RESIDUAL, obj: newEdge };
         }
@@ -126,25 +134,31 @@ function* EdmondsKarp(graph) {
     let residualNet = yield* createResidualNetwork(graph);
     let shortestAugmentedPath = shortestPathBfs(residualNet, 's', 't');
     while (shortestAugmentedPath.length > 0) {
-        yield { type: AlgoStatesEnum.FIND_PATH_RESIDUAL, obj: shortestAugmentedPath };
         let flows = [];
+        let pathEdges = [];
+        let pathEdgesResidual = [];
         for (let i = 0; i < shortestAugmentedPath.length - 1; i++) {
             let curEdge = residualNet.connections.get(shortestAugmentedPath[i])
                 .find(edge => edge.to === shortestAugmentedPath[i + 1]);
+            pathEdgesResidual.push(curEdge);
             flows.push(curEdge.flow);
         }
         let minFlow = Math.min(...flows);
         for (let i = 0; i < shortestAugmentedPath.length - 1; i++) {
             let curEdge = graph.connections.get(shortestAugmentedPath[i])
                 .find(edge => edge.to === shortestAugmentedPath[i + 1]);
+            pathEdges.push(curEdge);
             curEdge.flow += minFlow;
         }
-        yield { type: AlgoStatesEnum.MIN_FLOW_INCREASE, obj: { flow: minFlow, path: shortestAugmentedPath } };
+        yield {
+            type: AlgoStatesEnum.PATH_FOUND_MIN_FLOW_INCREASE,
+            obj: { flow: minFlow, path: pathEdges, pathResidual: pathEdgesResidual }
+        };
         residualNet = yield* createResidualNetwork(graph);
         shortestAugmentedPath = shortestPathBfs(residualNet, 's', 't');
     }
     let edgesFromStart = graph.connections.get("s");
     let maxFlow = edgesFromStart.reduce((acc, curEdge) => { return acc + curEdge.flow }, 0);
-    yield {type: AlgoStatesEnum.FINAL_CALC_MAXFLOW, obj: {edges: edgesFromStart, maxFlow: maxFlow}};
+    yield { type: AlgoStatesEnum.FINAL_CALC_MAXFLOW, obj: { edges: edgesFromStart, maxFlow: maxFlow } };
     return maxFlow;
 }
