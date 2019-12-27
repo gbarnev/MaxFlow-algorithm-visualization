@@ -28,13 +28,24 @@
 		<div class="graphs" hidden=1 id="flowNetDup"></div>
 	</div>
 	<div id="buttons-flowNetDup">
-		<button type="button" onclick="displayRandomGraph()">RANDOM GRAPH</button>
+		<button id="btnRandomGraph" type="button" onclick="displayRandomGraph()">RANDOM GRAPH</button>
 		<button type="button" onclick="runEdmondsKarpAlgorithm()">RUN EDMONDS-KARP</button>
 	</div>
 
 	<script type="text/javascript">
 
-		var graph = generateRandomFlowNetwork();
+		var fixedPositions = 
+		[
+			['s', [-285, 0]],
+			[1, [-95, 120]],
+			[2, [-95, -120]],
+			[3, [95, 120]],
+			[4, [95, -120]],
+			['t', [285, 0]]
+		]
+		var verticesPos = new Map(fixedPositions);
+
+		var graph = generateRandomFlowNetwork(6);
 		const nodesVisual = generateVisjsNodes(graph);
 		const edgesVisual = generateVisjsEdges(graph);
 		var nodesDataSet = new vis.DataSet(nodesVisual);
@@ -60,6 +71,10 @@
 				arrows:
 				{
 					to: { enabled: true, scaleFactor: 0.5 }
+				},
+				font:
+				{
+					size: 18
 				}
 			},
 			physics: {
@@ -67,16 +82,26 @@
 			},
 			manipulation: {
 				enabled: true
+			},
+			interaction: {
+				dragView: false,
+				zoomView: false
 			}
 		};
+		
+		var optionsResidual = cloneObj(options);
+		optionsResidual.manipulation.enabled = false;
+
 		var visNet = new vis.Network(flowNetContainer, data, options);
-		var visNetResidual = new vis.Network(flowNetContainerDup, dataResidual, options);
+		var visNetResidual = new vis.Network(flowNetContainerDup, dataResidual, optionsResidual);
 
 		function generateVisjsNodes(graph) {
 			return [...graph.connections.keys()].map(verticeId => {
 				return {
 					id: verticeId,
-					label: "Node " + verticeId
+					label: "Node " + verticeId,
+					x: verticesPos.get(verticeId)[0],
+					y: verticesPos.get(verticeId)[1]
 				}
 			});
 		}
@@ -97,7 +122,7 @@
 		}
 
 		function displayRandomGraph() {
-			graph = generateRandomFlowNetwork();
+			graph = generateRandomFlowNetwork(6);
 			displayOriginalNetwork(graph);
 		}
 
@@ -108,7 +133,7 @@
 			edgesDataSet.clear();
 			nodesDataSet.add(nodesVisual);
 			edgesDataSet.add(edgesVisual);
-			visNet.stabilize();
+			visNet.fit();
 		}
 
 		function displayResidualNetwork(graph) {
@@ -118,10 +143,11 @@
 			edgesDataSetResidual.clear();
 			nodesDataSetResidual.add(nodesVisual);
 			edgesDataSetResidual.add(edgesVisual);
-			visNetResidual.stabilize();
+			visNetResidual.fit();
 		}
 
 		async function runEdmondsKarpAlgorithm() {
+			document.getElementById("btnRandomGraph").disabled = true;
 			for (let step of EdmondsKarp(graph)) {
 				await waitMs(1000);
 				switch (step.type) {
@@ -182,11 +208,17 @@
 			visNet.selectEdges(edgesFromStart.map(edge => edge.id));
 			await waitMs(1000);
 			alert("Max flow is: " + maxFlowResult);
+			document.getElementById("btnRandomGraph").disabled = false;
 		}
 
 		async function waitMs(ms)
 		{
 			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+
+		function cloneObj(obj)
+		{
+			return JSON.parse(JSON.stringify(obj))
 		}
 	</script>
 </body>
