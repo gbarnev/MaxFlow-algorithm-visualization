@@ -43,6 +43,8 @@
 
 		var nodesDataSet = new vis.DataSet(nodesVisual);
 		var edgesDataSet = new vis.DataSet(edgesVisual);
+		var nodesDataSetResidual = new vis.DataSet();
+		var edgesDataSetResidual = new vis.DataSet();
 
 		// create a network
 		var flowNetContainer = document.getElementById('flowNet');
@@ -51,6 +53,7 @@
 			nodes: nodesDataSet,
 			edges: edgesDataSet
 		};
+		var dataResidual = { nodes: nodesDataSetResidual, edges: edgesDataSetResidual};
 		var options = {
 			configure:
 			{
@@ -68,7 +71,7 @@
 			}
 		};
 		var visNet = new vis.Network(flowNetContainer, data, options);
-		var visNetResidual = new vis.Network(flowNetContainerDup, data, options);
+		var visNetResidual = new vis.Network(flowNetContainerDup, dataResidual, options);
 
 		function displayRandomGraph() {
 			graph = generateRandomFlowNetwork();
@@ -89,21 +92,55 @@
 				switch (step.type) {
 					case AlgoStatesEnum.INIT_RESIDUAL:
 						console.log("INIT_RESIDUAL");
+						visualizeInitResidualGraph(step.obj);
 						break;
 					case AlgoStatesEnum.ADD_EDGE_RESIDUAL:
 						console.log("ADD_EDGE_RESIDUAL");
+						visualizeAddEdgeToResidualGraph(step.obj);
 						break;
 					case AlgoStatesEnum.FIND_PATH_RESIDUAL:
 						console.log("FIND_PATH_RESIDUAL");
+						visualizeFindPathInResidualGraph(step.obj);
 						break;
 					case AlgoStatesEnum.MIN_FLOW_INCREASE:
 						console.log("MIN_FLOW_INCREASE");
+						visualizeMinFlowIncrease(step.obj);
 						break;
 					case AlgoStatesEnum.FINAL_CALC_MAXFLOW:
 						console.log("FINAL_CALC_MAXFLOW");
+						visualizeFinalCalculationOfMaxFlow(step.obj);
 						break;
+					default:
+						console.error("Couldn't recognize algorithm step.");
 				}
 			}
+		}
+
+		function visualizeInitResidualGraph(vertices)
+		{
+
+		}
+
+		function visualizeAddEdgeToResidualGraph(edge)
+		{
+
+		}
+
+		function visualizeFindPathInResidualGraph(path)
+		{
+
+		}
+
+		function visualizeMinFlowIncrease(minFlowIncreaseAndPath)
+		{
+			let minFlowIncr = minFlowIncreaseAndPath[0];
+			let path = minFlowIncreaseAndPath[1];
+		}
+
+		function visualizeFinalCalculationOfMaxFlow(edgesFromStartAndMaxFlow)
+		{
+			let edgesFromStart = edgesFromStartAndMaxFlow[0];
+			let maxFlowResult = edgesFromStartAndMaxFlow[1];
 		}
 	</script>
 </body>
