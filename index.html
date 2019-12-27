@@ -18,6 +18,36 @@
 		#buttons-flowNetDup {
 			columns: 2;
 		}
+
+		.slider {
+			-webkit-appearance: none;
+			width: 30%;
+			height: 15px;
+			border-radius: 5px;
+			background: #d3d3d3;
+			outline: none;
+			opacity: 0.7;
+			-webkit-transition: .2s;
+			transition: opacity .2s;
+		}
+
+		.slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 25px;
+			height: 25px;
+			border-radius: 50%;
+			background: #4CAF50;
+			cursor: pointer;
+		}
+
+		.slider::-moz-range-thumb {
+			width: 25px;
+			height: 25px;
+			border-radius: 50%;
+			background: #4CAF50;
+			cursor: pointer;
+		}
 	</style>
 </head>
 
@@ -31,20 +61,29 @@
 		<button id="btnRandomGraph" type="button" onclick="displayRandomGraph()">RANDOM GRAPH</button>
 		<button type="button" onclick="runEdmondsKarpAlgorithm()">RUN EDMONDS-KARP</button>
 	</div>
+	<br>
+	<div class="slidecontainer">
+		<label>Execution speed: <br></label>
+		<input type="range" min="10" max="2000" value="1000" class="slider" id="algoSpeedRange">
+	</div>
 
 	<script type="text/javascript">
 
-		var fixedPositions = 
-		[
-			['s', [-285, 0]],
-			[1, [-95, 120]],
-			[2, [-95, -120]],
-			[3, [95, 120]],
-			[4, [95, -120]],
-			['t', [285, 0]]
-		]
+		var fixedPositions =
+			[
+				['s', [-285, 0]],
+				[1, [-95, 120]],
+				[2, [-95, -120]],
+				[3, [95, 120]],
+				[4, [95, -120]],
+				['t', [285, 0]]
+			]
 		var verticesPos = new Map(fixedPositions);
-
+		var algoSpeedSlider = document.getElementById("algoSpeedRange");
+		var algoSpeed = algoSpeedSlider.max - algoSpeedSlider.value;
+		algoSpeedSlider.oninput = function () {
+			algoSpeed = this.max - this.value;
+		}
 		var graph = generateRandomFlowNetwork(6);
 		const nodesVisual = generateVisjsNodes(graph);
 		const edgesVisual = generateVisjsEdges(graph);
@@ -88,7 +127,7 @@
 				zoomView: false
 			}
 		};
-		
+
 		var optionsResidual = cloneObj(options);
 		optionsResidual.manipulation.enabled = false;
 
@@ -122,8 +161,15 @@
 		}
 
 		function displayRandomGraph() {
+			hideResidualNet();
 			graph = generateRandomFlowNetwork(6);
 			displayOriginalNetwork(graph);
+		}
+
+		function hideResidualNet() {
+			let divResidual = document.getElementById("flowNetDup");
+			if (!divResidual.hidden)
+				divResidual.hidden = true;
 		}
 
 		function displayOriginalNetwork(graph) {
@@ -149,7 +195,7 @@
 		async function runEdmondsKarpAlgorithm() {
 			document.getElementById("btnRandomGraph").disabled = true;
 			for (let step of EdmondsKarp(graph)) {
-				await waitMs(1000);
+				await waitMs(algoSpeed);
 				switch (step.type) {
 					case AlgoStatesEnum.INIT_RESIDUAL:
 						console.log("INIT_RESIDUAL");
@@ -193,11 +239,11 @@
 			let pathEdges = minFlowIncrAndPaths.path;
 			let pathEdgesResidual = minFlowIncrAndPaths.pathResidual;
 			visNetResidual.selectEdges(pathEdgesResidual.map(edge => edge.id));
-			await waitMs(1000);
+			await waitMs(algoSpeed);
 			visNet.selectEdges(pathEdges.map(edge => edge.id));
-			await waitMs(1000);
-			pathEdges.forEach(edge => edgesDataSet.update({id: edge.id, label: edge.flow + "/" + edge.cap}));
-			await waitMs(1000);
+			await waitMs(algoSpeed);
+			pathEdges.forEach(edge => edgesDataSet.update({ id: edge.id, label: edge.flow + "/" + edge.cap }));
+			await waitMs(algoSpeed);
 			visNet.unselectAll();
 			visNetResidual.unselectAll();
 		}
@@ -206,18 +252,16 @@
 			let edgesFromStart = edgesFromStartAndMaxFlow.edges;
 			let maxFlowResult = edgesFromStartAndMaxFlow.maxFlow;
 			visNet.selectEdges(edgesFromStart.map(edge => edge.id));
-			await waitMs(1000);
+			await waitMs(algoSpeed);
 			alert("Max flow is: " + maxFlowResult);
 			document.getElementById("btnRandomGraph").disabled = false;
 		}
 
-		async function waitMs(ms)
-		{
+		async function waitMs(ms) {
 			return new Promise(resolve => setTimeout(resolve, ms));
 		}
 
-		function cloneObj(obj)
-		{
+		function cloneObj(obj) {
 			return JSON.parse(JSON.stringify(obj))
 		}
 	</script>
