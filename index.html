@@ -182,17 +182,37 @@
 			visNet.fit();
 		}
 
-		function displayResidualNetwork(graph) {
-			const nodesVisual = generateVisjsNodes(graph);
-			const edgesVisual = generateVisjsEdges(graph);
+		function displayResidualNetwork(visNodes, visEdges)
+		{
+			const clonedNodes = visNodes.map(node => cloneObj(node));
+			const clonedEdges = visEdges.map(edge => cloneObj(edge));
 			nodesDataSetResidual.clear();
 			edgesDataSetResidual.clear();
-			nodesDataSetResidual.add(nodesVisual);
-			edgesDataSetResidual.add(edgesVisual);
+			nodesDataSetResidual.add(clonedNodes);
+			edgesDataSetResidual.add(clonedEdges);
 			visNetResidual.fit();
 		}
 
+		function buildInternalGraph(nodesDataSet, edgesDataSet)
+		{
+			const newNodes = [];
+			const newEdges = [];
+			nodesDataSet.forEach(node => newNodes.push(node.id));
+			edgesDataSet.forEach(edge => 
+			{
+				const flowCap = edge.label.split('/');
+				newEdges.push({
+					from: edge.from,
+					to: edge.to,				 
+					id: edge.id,
+					flow: parseInt(flowCap[0]),
+					cap: parseInt(flowCap[1])})
+			})
+			return createGraph(newNodes, newEdges);
+		}
+
 		async function runEdmondsKarpAlgorithm() {
+			let graph = buildInternalGraph(nodesDataSet, edgesDataSet);
 			document.getElementById("btnRandomGraph").disabled = true;
 			for (let step of EdmondsKarp(graph)) {
 				await waitMs(algoSpeed);
@@ -224,9 +244,17 @@
 			if (container.hidden)
 				container.hidden = false;
 
+			const positions = visNet.getPositions();
+			const visJsNodes = vertices.map(verticeId => 
+			{
+				let node = nodesDataSet.get(verticeId);
+				node.x = positions[verticeId].x;
+				node.y = positions[verticeId].y;
+				return node;
+			});
+
 			//Create empty visual graph
-			const graph = createGraph(vertices, []);
-			displayResidualNetwork(graph);
+			displayResidualNetwork(visJsNodes, []);
 		}
 
 		function visualizeAddEdgeToResidualGraph(edge) {

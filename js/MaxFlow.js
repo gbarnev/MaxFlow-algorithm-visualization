@@ -77,7 +77,7 @@ function getRndInteger(min, max) {
 
 function* createResidualNetwork(graph) {
     let newEdges = [];
-    yield { type: AlgoStatesEnum.INIT_RESIDUAL, obj: graph.connections.keys() };
+    yield { type: AlgoStatesEnum.INIT_RESIDUAL, obj: Array.from(graph.connections.keys()) };
     for (let edge of graph.edges) {
         if (edge.flow > 0) {
             const newEdge = { id: EdgeIdGenerator.getNextEdgeId(), from: edge.to, to: edge.from, flow: edge.flow };
