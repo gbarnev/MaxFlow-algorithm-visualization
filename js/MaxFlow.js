@@ -42,9 +42,7 @@ function generateRandomFlowNetwork(vCnt) {
         vCnt = getRndInteger(1, 10) + 2;
     const eCnt = getRndInteger(1, vCnt * (vCnt - 1) / 2);
     const vertices = [...Array(vCnt - 2).keys()].map((x) => x + 1);
-    // @ts-ignore
     vertices.unshift('s');
-    // @ts-ignore
     vertices.push('t');
 
     // For every A, B in {Vertices}
@@ -132,30 +130,32 @@ function shortestPathBfs(graph, fromVId, toVId) {
 
 function* EdmondsKarp(graph) {
     let residualNet = yield* createResidualNetwork(graph);
-    let shortestAugmentedPath = shortestPathBfs(residualNet, 's', 't');
-    while (shortestAugmentedPath.length > 0) {
+    let shortestAugmentedPathVertices = shortestPathBfs(residualNet, 's', 't');
+    while (shortestAugmentedPathVertices.length > 0) {
         let flows = [];
         let pathEdges = [];
         let pathEdgesResidual = [];
-        for (let i = 0; i < shortestAugmentedPath.length - 1; i++) {
-            let curEdge = residualNet.connections.get(shortestAugmentedPath[i])
-                .find(edge => edge.to === shortestAugmentedPath[i + 1]);
+        //find residual path edges
+        for (let i = 0; i < shortestAugmentedPathVertices.length - 1; i++) {
+            let curEdge = residualNet.connections.get(shortestAugmentedPathVertices[i])
+                .find(edge => edge.to === shortestAugmentedPathVertices[i + 1]);
             pathEdgesResidual.push(curEdge);
             flows.push(curEdge.flow);
         }
         let minFlow = Math.min(...flows);
-        for (let i = 0; i < shortestAugmentedPath.length - 1; i++) {
-            let curEdge = graph.connections.get(shortestAugmentedPath[i])
-                .find(edge => edge.to === shortestAugmentedPath[i + 1]);
+        //find path edges in original graph
+        for (let i = 0; i < shortestAugmentedPathVertices.length - 1; i++) {
+            let curEdge = graph.connections.get(shortestAugmentedPathVertices[i])
+                .find(edge => edge.to === shortestAugmentedPathVertices[i + 1]);
             pathEdges.push(curEdge);
             curEdge.flow += minFlow;
         }
         yield {
             type: AlgoStatesEnum.PATH_FOUND_MIN_FLOW_INCREASE,
-            obj: { flow: minFlow, path: pathEdges, pathResidual: pathEdgesResidual }
+            obj: { pathOriginal: pathEdges, pathResidual: pathEdgesResidual }
         };
         residualNet = yield* createResidualNetwork(graph);
-        shortestAugmentedPath = shortestPathBfs(residualNet, 's', 't');
+        shortestAugmentedPathVertices = shortestPathBfs(residualNet, 's', 't');
     }
     let edgesFromStart = graph.connections.get("s");
     let maxFlow = edgesFromStart.reduce((acc, curEdge) => { return acc + curEdge.flow }, 0);

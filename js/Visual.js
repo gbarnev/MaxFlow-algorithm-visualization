@@ -235,10 +235,9 @@ function visualizeAddEdgeToResidualGraph(edge) {
     edgesDataSetResidual.add(visJsEdge);
 }
 
-async function visualizeMinFlowIncrease(minFlowIncrAndPaths) {
-    let minFlowIncr = minFlowIncrAndPaths.flow;
-    let pathEdges = minFlowIncrAndPaths.path;
-    let pathEdgesResidual = minFlowIncrAndPaths.pathResidual;
+async function visualizeMinFlowIncrease(originalAndResidualPaths) {
+    let pathEdges = originalAndResidualPaths.pathOriginal;
+    let pathEdgesResidual = originalAndResidualPaths.pathResidual;
     visNetResidual.selectEdges(pathEdgesResidual.map(edge => edge.id));
     await waitMs(algoSpeed);
     visNet.selectEdges(pathEdges.map(edge => edge.id));
