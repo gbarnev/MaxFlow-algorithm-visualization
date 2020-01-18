@@ -92,12 +92,10 @@ function edgeToVisjsEdge(edge) {
 }
 
 function refreshAlgorithm() {
-    if(isGraphRefreshed)
+    if (isGraphRefreshed)
         return;
 
-    nodesDataSetResidual.clear();
-    edgesDataSetResidual.clear();
-    hideResidualNet();
+    removeResidualNet();
 
     edgesDataSet.edges
     edgesDataSet.forEach(
@@ -110,16 +108,23 @@ function refreshAlgorithm() {
     changeGraphRefreshed(true);
 }
 
-function displayRandomGraph() {
+function removeResidualNet() {
+    nodesDataSetResidual.clear();
+    edgesDataSetResidual.clear();
     hideResidualNet();
-    graph = generateRandomFlowNetwork(6);
-    displayOriginalNetwork(graph);
 }
 
 function hideResidualNet() {
     let divResidual = document.getElementById("flowNetDup");
     if (!divResidual.hidden)
         divResidual.hidden = true;
+}
+
+function displayRandomGraph() {
+    changeGraphRefreshed(true);
+    removeResidualNet();
+    graph = generateRandomFlowNetwork(6);
+    displayOriginalNetwork(graph);
 }
 
 function revealResidualNet() {
@@ -195,21 +200,17 @@ async function runEdmondsKarpAlgorithm() {
     changeGraphRefreshed(false);
 }
 
-function changeGraphRefreshed(refreshed)
-{
+function changeGraphRefreshed(refreshed) {
     disableButtons(!refreshed, document.getElementsByClassName("btnsRunAlgorithm"));
     isGraphRefreshed = refreshed;
 }
 
-function disableAllButtons(disable)
-{
+function disableAllButtons(disable) {
     disableButtons(disable, document.getElementsByTagName("button"));
 }
 
-function disableButtons(disable, buttons)
-{
-    for(let btn of buttons)
-    {
+function disableButtons(disable, buttons) {
+    for (let btn of buttons) {
         btn.disabled = disable;
     }
 }
