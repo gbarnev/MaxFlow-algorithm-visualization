@@ -107,7 +107,7 @@ function refreshAlgorithm() {
             edgesDataSet.update({ id: edge.id, label: "0/" + flowAndCap[1] });
         })
     visNet.unselectAll();
-    isGraphRefreshed = true;
+    changeGraphRefreshed(true);
 }
 
 function displayRandomGraph() {
@@ -166,7 +166,6 @@ function buildInternalGraph(nodesDataSet, edgesDataSet) {
 }
 
 async function runEdmondsKarpAlgorithm() {
-    isGraphRefreshed = false;
     let graph = buildInternalGraph(nodesDataSet, edgesDataSet);
     disableAllButtons(true);
     for (let step of EdmondsKarp(graph)) {
@@ -193,11 +192,22 @@ async function runEdmondsKarpAlgorithm() {
         }
     }
     disableAllButtons(false);
+    changeGraphRefreshed(false);
+}
+
+function changeGraphRefreshed(refreshed)
+{
+    disableButtons(!refreshed, document.getElementsByClassName("btnsRunAlgorithm"));
+    isGraphRefreshed = refreshed;
 }
 
 function disableAllButtons(disable)
 {
-    let buttons = document.getElementsByTagName("button");
+    disableButtons(disable, document.getElementsByTagName("button"));
+}
+
+function disableButtons(disable, buttons)
+{
     for(let btn of buttons)
     {
         btn.disabled = disable;
