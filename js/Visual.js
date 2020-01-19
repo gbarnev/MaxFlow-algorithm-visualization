@@ -217,6 +217,14 @@ function edgeToVisjsEdge(edge) {
     }
 }
 
+function displayEmptyGraph()
+{
+    changeGraphRefreshed(true);
+    removeResidualNet();
+    graph = createGraph(['s', 't'], []);
+    displayOriginalNetwork(graph);
+}
+
 function refreshAlgorithm() {
     if (isGraphRefreshed)
         return;
@@ -297,7 +305,6 @@ function buildInternalGraph(nodesDataSet, edgesDataSet) {
 }
 
 async function runEdmondsKarpAlgorithm() {
-    document.getElementById("editContainer").hide = true;
     let graph = buildInternalGraph(nodesDataSet, edgesDataSet);
     disableAllButtons(true);
     for (let step of EdmondsKarp(graph)) {
@@ -381,7 +388,6 @@ async function visualizeFinalCalculationOfMaxFlow(edgesFromStartAndMaxFlow) {
     visNet.selectEdges(edgesFromStart.map(edge => edge.id));
     await waitMs(algoSpeed);
     alert("Max flow is: " + maxFlowResult);
-    document.getElementById("btnRandomGraph").disabled = false;
 }
 
 async function waitMs(ms) {
