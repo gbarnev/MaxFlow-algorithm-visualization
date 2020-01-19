@@ -57,6 +57,12 @@ let options = {
         enabled: true,
         initiallyActive: true,
         addNode: function (data, callback) {
+            if (!isGraphRefreshed) {
+                alert("Error: Make sure graph is refreshed before editing it!");
+                callback(null);
+                return;
+            }
+
             let newNodeLabel = prompt("Enter the label of the new node.", "Node " + (nodesDataSet.length - 1).toString());
             if (newNodeLabel === null) {
                 callback(null);
@@ -76,6 +82,12 @@ let options = {
             callback(newNode);
         },
         editNode: function (data, callback) {
+            if (!isGraphRefreshed) {
+                alert("Error: Make sure graph is refreshed before editing it!");
+                callback(null);
+                return;
+            }
+
             if (data.id === 's' || data.id === 't') {
                 alert("Error: You are not able to modify the Source or the Sink node!");
                 callback(null);
@@ -104,6 +116,12 @@ let options = {
         },
 
         deleteNode: function (data, callback) {
+            if (!isGraphRefreshed) {
+                alert("Error: Make sure graph is refreshed before editing it!");
+                callback(null);
+                return;
+            }
+
             if (data.nodes.find(nodeId => nodeId === 's' || nodeId === 't') != null) {
                 alert("Error: You are not able to delete the Source or the Sink node!");
                 callback(null);
@@ -113,6 +131,12 @@ let options = {
         },
 
         addEdge: function (data, callback) {
+            if (!isGraphRefreshed) {
+                alert("Error: Make sure graph is refreshed before editing it!");
+                callback(null);
+                return;
+            }
+
             if (data.from === data.to) {
                 alert("Error: An edge connected to iteself is not permited!");
                 callback(null);
@@ -147,9 +171,22 @@ let options = {
             }
             callback(newEdge);
         },
-
+        deleteEdge: function (data, callback) {
+            if (!isGraphRefreshed) {
+                alert("Error: Make sure graph is refreshed before editing it!");
+                callback(null);
+                return;
+            }
+            callback(data);
+        },
         editEdge: {
             editWithoutDrag: function (data, callback) {
+                if (!isGraphRefreshed) {
+                    alert("Error: Make sure graph is refreshed before editing it!");
+                    callback(null);
+                    return;
+                }
+
                 let cap = prompt("Enter the capacity of the new edge:");
                 if (cap === null) {
                     callback(null);
@@ -217,8 +254,7 @@ function edgeToVisjsEdge(edge) {
     }
 }
 
-function displayEmptyGraph()
-{
+function displayEmptyGraph() {
     changeGraphRefreshed(true);
     removeResidualNet();
     graph = createGraph(['s', 't'], []);
