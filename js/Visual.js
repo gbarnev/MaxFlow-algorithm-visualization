@@ -38,20 +38,132 @@ let options = {
     },
     edges:
     {
+        length: 250,
         arrows:
         {
-            to: { enabled: true, scaleFactor: 0.5 }
+            to: { enabled: true, scaleFactor: 0.65 }
         },
         font:
         {
             size: 18
-        }
+        },
+        color: "#2B7CE9",
+        smooth: { type: 'curvedCW', roundness: 0.1 }
     },
     physics: {
         enabled: false
     },
     manipulation: {
-        enabled: true
+        enabled: true,
+        initiallyActive: true,
+        addNode: function (data, callback) {
+            let newNodeLabel = prompt("Enter the label of the new node.", "Node " + (nodesDataSet.length - 1).toString());
+            if (newNodeLabel === null) {
+                callback(null);
+                return;
+            }
+            if (newNodeLabel === "") {
+                alert("Error: Invalid node label!");
+                callback(null);
+                return;
+            }
+            let newNode = {
+                id: nodesDataSet.length - 1,
+                label: newNodeLabel,
+                x: data.x,
+                y: data.y
+            }
+            callback(newNode);
+        },
+        editNode: function (data, callback) {
+            if (data.id === 's' || data.id === 't') {
+                alert("Error: You are not able to modify the Source or the Sink node!");
+                callback(null);
+                return;
+            }
+
+            let changedNodeLabel = prompt("Enter the new label for the node.");
+            if (changedNodeLabel === null) {
+                callback(null);
+                return;
+            }
+
+            if (changedNodeLabel === "") {
+                alert("Error: Please enter a valid label for the new node!");
+                callback(null);
+                return;
+            }
+
+            if (nodesDataSet.get().find(node => node.label === changedNodeLabel) != null) {
+                alert("Error: A Node with the same label already exists!");
+                callback(null);
+                return;
+            }
+            nodesDataSet.update({ id: data.id, label: changedNodeLabel });
+            callback(null);
+        },
+
+        deleteNode: function (data, callback) {
+            if (data.nodes.find(nodeId => nodeId === 's' || nodeId === 't') != null) {
+                alert("Error: You are not able to delete the Source or the Sink node!");
+                callback(null);
+                return;
+            }
+            callback(data);
+        },
+
+        addEdge: function (data, callback) {
+            if (data.from === data.to) {
+                alert("Error: An edge connected to iteself is not permited!");
+                callback(null);
+                return;
+            }
+            //If A -> B, prevent B -> A
+            for (let edge of edgesDataSet.get()) {
+                if (edge.from === data.to && edge.to === data.from) {
+                    alert("Error: There is already a connection from " +
+                        nodesDataSet.get(edge.from).label + " to " + nodesDataSet.get(edge.to).label + "!");
+                    callback(null);
+                    return;
+                }
+            }
+            let cap = prompt("Enter the capacity of the new edge:");
+            if (cap === null) {
+                callback(null);
+                return;
+            }
+
+            if (isNaN(cap) || cap === "" || parseInt(cap) <= 0) {
+                alert("Error: Capacity should be positive a number!");
+                callback(null);
+                return;
+            }
+
+            let newEdge = {
+                id: EdgeIdGenerator.getNextEdgeId(),
+                from: data.from,
+                to: data.to,
+                label: "0/" + cap
+            }
+            callback(newEdge);
+        },
+
+        editEdge: {
+            editWithoutDrag: function (data, callback) {
+                let cap = prompt("Enter the capacity of the new edge:");
+                if (cap === null) {
+                    callback(null);
+                    return;
+                }
+                if (isNaN(cap) || cap === "" || parseInt(cap) <= 0) {
+                    alert("Error: Capacity should be positive a number!");
+                    callback(null);
+                    return;
+                }
+                edgesDataSet.update({ id: data.id, from: data.from, to: data.to, label: "0/" + cap });
+                callback(null);
+            }
+        }
     },
     interaction: {
         dragView: false,
@@ -67,12 +179,27 @@ let visNetResidual = new vis.Network(flowNetContainerDup, dataResidual, optionsR
 
 function generateVisjsNodes(graph) {
     return [...graph.connections.keys()].map(verticeId => {
-        return {
+
+        let node = {
             id: verticeId,
             label: "Node " + verticeId,
             x: verticesPos.get(verticeId)[0],
-            y: verticesPos.get(verticeId)[1]
+            y: verticesPos.get(verticeId)[1],
+        };
+
+        if (verticeId === 's') {
+            node.label = "Source";
+            node.shape = "dot";
+            node.color = 'rgb(0,255,140)';
+            node.borderWidth = 4;
         }
+        if (verticeId === 't') {
+            node.label = "Sink";
+            node.shape = "dot";
+            node.color = '#ff1a1a';
+            node.borderWidth = 4;
+        }
+        return node;
     });
 }
 
@@ -86,8 +213,7 @@ function edgeToVisjsEdge(edge) {
         from: edge.from,
         to: edge.to,
         label: edge.flow + (typeof edge.cap !== 'undefined' ? "/" + edge.cap : ""),
-        length: 250,
-        smooth: { type: 'curvedCW', roundness: 0.1 }
+
     }
 }
 
@@ -171,6 +297,7 @@ function buildInternalGraph(nodesDataSet, edgesDataSet) {
 }
 
 async function runEdmondsKarpAlgorithm() {
+    document.getElementById("editContainer").hide = true;
     let graph = buildInternalGraph(nodesDataSet, edgesDataSet);
     disableAllButtons(true);
     for (let step of EdmondsKarp(graph)) {
