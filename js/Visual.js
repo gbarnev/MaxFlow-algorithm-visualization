@@ -1,27 +1,29 @@
-let fixedPositions =
+const RANDOM_GRAPH_VERTICES_COUNT = 6;
+const FIXED_VERTICE_POSITIONS =
     [
-        ['s', [-285, 0]],
-        [1, [-95, 120]],
-        [2, [-95, -120]],
-        [3, [95, 120]],
-        [4, [95, -120]],
-        ['t', [285, 0]]
-    ]
+        [-285, 0],
+        [-95, 120],
+        [-95, -120],
+        [95, 120],
+        [95, -120],
+        [285, 0]
+    ];
 
+let EdgesInitialCache;
 let isGraphRefreshed = true;
-let verticesPos = new Map(fixedPositions);
 let algoSpeedSlider = document.getElementById("algoSpeedRange");
 let algoSpeed = algoSpeedSlider.max - algoSpeedSlider.value;
 algoSpeedSlider.oninput = function () {
     algoSpeed = this.max - this.value;
 }
-let graph = generateRandomFlowNetwork(6);
-const nodesVisual = generateVisjsNodes(graph);
-const edgesVisual = generateVisjsEdges(graph);
+let graph = generateRandomFlowNetwork(RANDOM_GRAPH_VERTICES_COUNT);
+const nodesVisual = generateVisjsNodes([...graph.connections.keys()], FIXED_VERTICE_POSITIONS);
+const edgesVisual = generateVisjsEdges(graph.edges);
 let nodesDataSet = new vis.DataSet(nodesVisual);
 let edgesDataSet = new vis.DataSet(edgesVisual);
 let nodesDataSetResidual = new vis.DataSet(nodesVisual);
 let edgesDataSetResidual = new vis.DataSet(edgesVisual);
+EdgesInitialCache = cloneObj(edgesDataSet.get());
 
 // create a network
 let flowNetContainer = document.getElementById('flowNet');
@@ -63,7 +65,7 @@ let options = {
                 return;
             }
 
-            let newNodeLabel = prompt("Enter the label of the new node.", "Node " + (nodesDataSet.length - 1).toString());
+            let newNodeLabel = prompt("Enter the label of the new node.");
             if (newNodeLabel === null) {
                 callback(null);
                 return;
@@ -74,7 +76,7 @@ let options = {
                 return;
             }
             let newNode = {
-                id: nodesDataSet.length - 1,
+                id: IdGenerator.getNextId(),
                 label: newNodeLabel,
                 x: data.x,
                 y: data.y
@@ -151,23 +153,32 @@ let options = {
                     return;
                 }
             }
-            let cap = prompt("Enter the capacity of the new edge:");
-            if (cap === null) {
+            let flowCapStr = prompt("Enter <flow>/<capacity> of the new edge:");
+            if (flowCapStr === null) {
                 callback(null);
                 return;
             }
 
-            if (isNaN(cap) || cap === "" || parseInt(cap) <= 0) {
-                alert("Error: Capacity should be positive a number!");
+            let flowCapArr = flowCapStr.split('/');
+            if (flowCapArr.length !== 2) {
+                alert("Error: Wrong format. Make sure you enter <flow>/<capacity>.");
+                callback(null);
+                return;
+            }
+
+            if (isNaN(flowCapArr[0]) || flowCapArr[0] === "" || parseInt(flowCapArr[0]) < 0 ||
+                isNaN(flowCapArr[1]) || flowCapArr[1] === "" || parseInt(flowCapArr[1]) <= 0
+            ) {
+                alert("Error: Flow and capacity should be positive numbers!");
                 callback(null);
                 return;
             }
 
             let newEdge = {
-                id: EdgeIdGenerator.getNextEdgeId(),
+                id: IdGenerator.getNextId(),
                 from: data.from,
                 to: data.to,
-                label: "0/" + cap
+                label: flowCapStr
             }
             callback(newEdge);
         },
@@ -186,18 +197,27 @@ let options = {
                     callback(null);
                     return;
                 }
+                let flowCapStr = prompt("Enter <flow>/<capacity> of the new edge:");
+                if (flowCapStr === null) {
+                    callback(null);
+                    return;
+                }
+                let flowCapArr = flowCapStr.split('/');
+                if (flowCapArr.length !== 2) {
+                    alert("Error: Wrong format. Make sure you enter <flow>/<capacity>.");
+                    callback(null);
+                    return;
+                }
 
-                let cap = prompt("Enter the capacity of the new edge:");
-                if (cap === null) {
+                if (isNaN(flowCapArr[0]) || flowCapArr[0] === "" || parseInt(flowCapArr[0]) < 0 ||
+                    isNaN(flowCapArr[1]) || flowCapArr[1] === "" || parseInt(flowCapArr[1]) <= 0
+                ) {
+                    alert("Error: Flow and capacity should be positive numbers!");
                     callback(null);
                     return;
                 }
-                if (isNaN(cap) || cap === "" || parseInt(cap) <= 0) {
-                    alert("Error: Capacity should be positive a number!");
-                    callback(null);
-                    return;
-                }
-                edgesDataSet.update({ id: data.id, from: data.from, to: data.to, label: "0/" + cap });
+
+                edgesDataSet.update({ id: data.id, from: data.from, to: data.to, label: flowCapStr });
                 callback(null);
             }
         }
@@ -214,15 +234,20 @@ optionsResidual.manipulation.enabled = false;
 let visNet = new vis.Network(flowNetContainer, data, options);
 let visNetResidual = new vis.Network(flowNetContainerDup, dataResidual, optionsResidual);
 
-function generateVisjsNodes(graph) {
-    return [...graph.connections.keys()].map(verticeId => {
+function generateVisjsNodes(verticeIds, fixedPositions) {
+    const nodes = [];
+    for (let i = 0; i < verticeIds.length; i++) {
 
+        let verticeId = verticeIds[i];
         let node = {
             id: verticeId,
-            label: "Node " + verticeId,
-            x: verticesPos.get(verticeId)[0],
-            y: verticesPos.get(verticeId)[1],
+            label: "Node " + i,
         };
+
+        if (fixedPositions !== undefined && fixedPositions !== null) {
+            node.x = fixedPositions[i][0];
+            node.y = fixedPositions[i][1];
+        }
 
         if (verticeId === 's') {
             node.label = "Source";
@@ -236,12 +261,13 @@ function generateVisjsNodes(graph) {
             node.color = '#ff1a1a';
             node.borderWidth = 4;
         }
-        return node;
-    });
+        nodes.push(node);
+    }
+    return nodes;
 }
 
-function generateVisjsEdges(graph) {
-    return graph.edges.map(edgeToVisjsEdge);
+function generateVisjsEdges(edges) {
+    return edges.map(edgeToVisjsEdge);
 }
 
 function edgeToVisjsEdge(edge) {
@@ -257,8 +283,9 @@ function edgeToVisjsEdge(edge) {
 function displayEmptyGraph() {
     changeGraphRefreshed(true);
     removeResidualNet();
-    graph = createGraph(['s', 't'], []);
-    displayOriginalNetwork(graph);
+    const graph = createGraph(['s', 't'], []);
+    const fixedPositions = [FIXED_VERTICE_POSITIONS[0], FIXED_VERTICE_POSITIONS[FIXED_VERTICE_POSITIONS.length - 1]]
+    displayInternalGraph(graph, fixedPositions);
 }
 
 function refreshAlgorithm() {
@@ -267,12 +294,10 @@ function refreshAlgorithm() {
 
     removeResidualNet();
 
-    edgesDataSet.edges
     edgesDataSet.forEach(
         edge => {
-            let label = edge.label;
-            let flowAndCap = label.split('/');
-            edgesDataSet.update({ id: edge.id, label: "0/" + flowAndCap[1] });
+            let cachedEdge = EdgesInitialCache.find(edgeCached => edge.id === edgeCached.id);
+            edgesDataSet.update({ id: edge.id, label: cachedEdge.label });
         })
     visNet.unselectAll();
     changeGraphRefreshed(true);
@@ -293,8 +318,8 @@ function hideResidualNet() {
 function displayRandomGraph() {
     changeGraphRefreshed(true);
     removeResidualNet();
-    graph = generateRandomFlowNetwork(6);
-    displayOriginalNetwork(graph);
+    graph = generateRandomFlowNetwork(RANDOM_GRAPH_VERTICES_COUNT);
+    displayInternalGraph(graph, FIXED_VERTICE_POSITIONS);
 }
 
 function revealResidualNet() {
@@ -303,9 +328,9 @@ function revealResidualNet() {
         container.hidden = false;
 }
 
-function displayOriginalNetwork(graph) {
-    const nodesVisual = generateVisjsNodes(graph);
-    const edgesVisual = generateVisjsEdges(graph);
+function displayInternalGraph(graph, fixedPositions) {
+    const nodesVisual = generateVisjsNodes([...graph.connections.keys()], fixedPositions);
+    const edgesVisual = generateVisjsEdges(graph.edges);
     nodesDataSet.clear();
     edgesDataSet.clear();
     nodesDataSet.add(nodesVisual);
@@ -342,6 +367,7 @@ function buildInternalGraph(nodesDataSet, edgesDataSet) {
 
 async function runEdmondsKarpAlgorithm() {
     let graph = buildInternalGraph(nodesDataSet, edgesDataSet);
+    EdgesInitialCache = cloneObj(edgesDataSet.get());
     disableAllButtons(true);
     for (let step of EdmondsKarp(graph)) {
         await waitMs(algoSpeed);
