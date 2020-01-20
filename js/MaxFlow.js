@@ -11,7 +11,7 @@ var edge8 = { from: 4, to: 3, flow: 0, cap: 7 };
 var edge9 = { from: 4, to: 't', flow: 0, cap: 4 };
 var edges = [edge1, edge2, edge3, edge4, edge5, edge6, edge7, edge8, edge9];
 */
-var AlgoStatesEnum =
+let AlgoStatesEnum =
 {
     INIT_RESIDUAL: 0,
     ADD_EDGE_RESIDUAL: 1,
@@ -19,10 +19,10 @@ var AlgoStatesEnum =
     FINAL_CALC_MAXFLOW: 3
 }
 
-var EdgeIdGenerator = function () {
+let IdGenerator = function () {
     var counter = 0;
     return {
-        getNextEdgeId: function () {
+        getNextId: function () {
             return counter++;
         }
     }
@@ -41,7 +41,11 @@ function generateRandomFlowNetwork(vCnt) {
     if (typeof vCnt === 'undefined')
         vCnt = getRndInteger(1, 10) + 2;
     const eCnt = getRndInteger(1, vCnt * (vCnt - 1) / 2);
-    const vertices = [...Array(vCnt - 2).keys()].map((x) => x + 1);
+
+    const vertices = [];
+    for (let i = 0; i < vCnt - 2; i++) {
+        vertices.push(IdGenerator.getNextId());
+    }
     vertices.unshift('s');
     vertices.push('t');
 
@@ -62,7 +66,7 @@ function generateRandomFlowNetwork(vCnt) {
             edge.from == vTo && edge.to == vFrom))
             continue;
 
-        allEdges.push({ id: EdgeIdGenerator.getNextEdgeId(), from: vFrom, to: vTo, flow: 0, cap: getRndInteger(1, 15) })
+        allEdges.push({ id: IdGenerator.getNextId(), from: vFrom, to: vTo, flow: 0, cap: getRndInteger(1, 15) })
         --leftEdgesToAdd;
     }
 
@@ -78,13 +82,13 @@ function* createResidualNetwork(graph) {
     yield { type: AlgoStatesEnum.INIT_RESIDUAL, obj: Array.from(graph.connections.keys()) };
     for (let edge of graph.edges) {
         if (edge.flow > 0) {
-            const newEdge = { id: EdgeIdGenerator.getNextEdgeId(), from: edge.to, to: edge.from, flow: edge.flow };
+            const newEdge = { id: IdGenerator.getNextId(), from: edge.to, to: edge.from, flow: edge.flow };
             newEdges.push(newEdge);
             yield { type: AlgoStatesEnum.ADD_EDGE_RESIDUAL, obj: newEdge };
         }
 
         if (edge.flow < edge.cap) {
-            const newEdge = { id: EdgeIdGenerator.getNextEdgeId(), from: edge.from, to: edge.to, flow: (edge.cap - edge.flow) };
+            const newEdge = { id: IdGenerator.getNextId(), from: edge.from, to: edge.to, flow: (edge.cap - edge.flow) };
             newEdges.push(newEdge);
             yield { type: AlgoStatesEnum.ADD_EDGE_RESIDUAL, obj: newEdge };
         }
