@@ -1,16 +1,3 @@
-/*
-var vertices = ['s', 1, 2, 3, 4, 't'];
-var edge1 = { from: 's', to: 1, flow: 0, cap: 16 };
-var edge2 = { from: 's', to: 2, flow: 0, cap: 13 };
-var edge3 = { from: 2, to: 1, flow: 0, cap: 4 };
-var edge4 = { from: 2, to: 4, flow: 0, cap: 14 };
-var edge5 = { from: 1, to: 3, flow: 0, cap: 12 };
-var edge6 = { from: 3, to: 2, flow: 0, cap: 9 };
-var edge7 = { from: 3, to: 't', flow: 0, cap: 20 };
-var edge8 = { from: 4, to: 3, flow: 0, cap: 7 };
-var edge9 = { from: 4, to: 't', flow: 0, cap: 4 };
-var edges = [edge1, edge2, edge3, edge4, edge5, edge6, edge7, edge8, edge9];
-*/
 let AlgoStatesEnum =
 {
     INIT_RESIDUAL: 0,
