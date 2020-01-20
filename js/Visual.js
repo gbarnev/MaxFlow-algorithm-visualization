@@ -9,6 +9,7 @@ const FIXED_VERTICE_POSITIONS =
         [285, 0]
     ];
 
+let EdgesInitialCache;
 let isGraphRefreshed = true;
 let algoSpeedSlider = document.getElementById("algoSpeedRange");
 let algoSpeed = algoSpeedSlider.max - algoSpeedSlider.value;
@@ -22,6 +23,7 @@ let nodesDataSet = new vis.DataSet(nodesVisual);
 let edgesDataSet = new vis.DataSet(edgesVisual);
 let nodesDataSetResidual = new vis.DataSet(nodesVisual);
 let edgesDataSetResidual = new vis.DataSet(edgesVisual);
+EdgesInitialCache = cloneObj(edgesDataSet.get());
 
 // create a network
 let flowNetContainer = document.getElementById('flowNet');
@@ -292,12 +294,10 @@ function refreshAlgorithm() {
 
     removeResidualNet();
 
-    edgesDataSet.edges
     edgesDataSet.forEach(
         edge => {
-            let label = edge.label;
-            let flowAndCap = label.split('/');
-            edgesDataSet.update({ id: edge.id, label: "0/" + flowAndCap[1] });
+            let cachedEdge = EdgesInitialCache.find(edgeCached => edge.id === edgeCached.id);
+            edgesDataSet.update({ id: edge.id, label: cachedEdge.label });
         })
     visNet.unselectAll();
     changeGraphRefreshed(true);
@@ -367,6 +367,7 @@ function buildInternalGraph(nodesDataSet, edgesDataSet) {
 
 async function runEdmondsKarpAlgorithm() {
     let graph = buildInternalGraph(nodesDataSet, edgesDataSet);
+    EdgesInitialCache = cloneObj(edgesDataSet.get());
     disableAllButtons(true);
     for (let step of EdmondsKarp(graph)) {
         await waitMs(algoSpeed);
