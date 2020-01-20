@@ -151,14 +151,23 @@ let options = {
                     return;
                 }
             }
-            let cap = prompt("Enter the capacity of the new edge:");
-            if (cap === null) {
+            let flowCapStr = prompt("Enter <flow>/<capacity> of the new edge:");
+            if (flowCapStr === null) {
                 callback(null);
                 return;
             }
 
-            if (isNaN(cap) || cap === "" || parseInt(cap) <= 0) {
-                alert("Error: Capacity should be positive a number!");
+            let flowCapArr = flowCapStr.split('/');
+            if (flowCapArr.length !== 2) {
+                alert("Error: Wrong format. Make sure you enter <flow>/<capacity>.");
+                callback(null);
+                return;
+            }
+
+            if (isNaN(flowCapArr[0]) || flowCapArr[0] === "" || parseInt(flowCapArr[0]) < 0 ||
+                isNaN(flowCapArr[1]) || flowCapArr[1] === "" || parseInt(flowCapArr[1]) <= 0
+            ) {
+                alert("Error: Flow and capacity should be positive numbers!");
                 callback(null);
                 return;
             }
@@ -167,7 +176,7 @@ let options = {
                 id: IdGenerator.getNextId(),
                 from: data.from,
                 to: data.to,
-                label: "0/" + cap
+                label: flowCapStr
             }
             callback(newEdge);
         },
@@ -186,18 +195,27 @@ let options = {
                     callback(null);
                     return;
                 }
+                let flowCapStr = prompt("Enter <flow>/<capacity> of the new edge:");
+                if (flowCapStr === null) {
+                    callback(null);
+                    return;
+                }
+                let flowCapArr = flowCapStr.split('/');
+                if (flowCapArr.length !== 2) {
+                    alert("Error: Wrong format. Make sure you enter <flow>/<capacity>.");
+                    callback(null);
+                    return;
+                }
 
-                let cap = prompt("Enter the capacity of the new edge:");
-                if (cap === null) {
+                if (isNaN(flowCapArr[0]) || flowCapArr[0] === "" || parseInt(flowCapArr[0]) < 0 ||
+                    isNaN(flowCapArr[1]) || flowCapArr[1] === "" || parseInt(flowCapArr[1]) <= 0
+                ) {
+                    alert("Error: Flow and capacity should be positive numbers!");
                     callback(null);
                     return;
                 }
-                if (isNaN(cap) || cap === "" || parseInt(cap) <= 0) {
-                    alert("Error: Capacity should be positive a number!");
-                    callback(null);
-                    return;
-                }
-                edgesDataSet.update({ id: data.id, from: data.from, to: data.to, label: "0/" + cap });
+
+                edgesDataSet.update({ id: data.id, from: data.from, to: data.to, label: flowCapStr });
                 callback(null);
             }
         }
