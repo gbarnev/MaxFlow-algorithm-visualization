@@ -151,8 +151,15 @@ function* EdmondsKarp(graph) {
         for (let i = 0; i < shortestAugmentedPathVertices.length - 1; i++) {
             let curEdge = graph.connections.get(shortestAugmentedPathVertices[i])
                 .find(edge => edge.to === shortestAugmentedPathVertices[i + 1]);
+            if (curEdge) {
+                curEdge.flow += minFlow;
+            }
+            else {
+                curEdge = graph.connections.get(shortestAugmentedPathVertices[i + 1])
+                    .find(edge => edge.to === shortestAugmentedPathVertices[i]);
+                curEdge.flow -= minFlow;
+            }
             pathEdges.push(curEdge);
-            curEdge.flow += minFlow;
         }
         yield {
             type: AlgoStatesEnum.PATH_FOUND_MIN_FLOW_INCREASE,
